@@ -31,7 +31,7 @@ type Grupo = {
   saldo: number | null;
 };
 
-type SecaoAtiva = 'home' | 'jogos' | 'grupos' | 'classificacao';
+type SecaoAtiva = 'home' | 'jogos' | 'grupos' | 'classificacao' | 'estatisticas';
 
 function formatarData(data: string | null) {
   if (!data) return 'Data não definida';
@@ -327,6 +327,12 @@ export default function CopaScreen() {
           'Veja os grupos oficiais da Copa'
         )}
 
+        {renderBotaoHome(
+          'estatisticas',
+          '📊 Estatísticas',
+          'Veja os principais números da Copa'
+        )}
+
       </>
     );
   }
@@ -437,6 +443,142 @@ export default function CopaScreen() {
     );
   }
 
+  function calcularMelhorAtaque() {
+    const selecoesComGols = grupos.filter(
+      (time) => (time.gols_pro ?? 0) > 0
+    );
+
+    const ordenado = [...selecoesComGols].sort(
+      (a, b) => (b.gols_pro ?? 0) - (a.gols_pro ?? 0)
+    );
+
+    return ordenado[0];
+  }
+
+  function calcularMelhorDefesa() {
+    const selecoesComJogos = grupos.filter((time) => (time.jogos ?? 0) > 0);
+
+    const ordenado = [...selecoesComJogos].sort(
+      (a, b) => (a.gols_contra ?? 0) - (b.gols_contra ?? 0)
+    );
+
+    return ordenado[0];
+  }
+
+  function calcularMaiorSaldo() {
+    const selecoesComJogos = grupos.filter((time) => (time.jogos ?? 0) > 0);
+
+    const ordenado = [...selecoesComJogos].sort(
+      (a, b) => (b.saldo ?? 0) - (a.saldo ?? 0)
+    );
+
+    return ordenado[0];
+  }
+
+  function calcularJogoMaisGols() {
+    const jogosComPlacar = jogos.filter(
+      (jogo) => jogo.placar_casa !== null && jogo.placar_fora !== null
+    );
+
+    const ordenado = [...jogosComPlacar].sort(
+      (a, b) =>
+        ((b.placar_casa ?? 0) + (b.placar_fora ?? 0)) -
+        ((a.placar_casa ?? 0) + (a.placar_fora ?? 0))
+    );
+
+    return ordenado[0];
+  }
+
+  function renderEstatisticas() {
+    const melhorAtaque = calcularMelhorAtaque();
+    const melhorDefesa = calcularMelhorDefesa();
+    const maiorSaldo = calcularMaiorSaldo();
+    const jogoMaisGols = calcularJogoMaisGols();
+
+    return (
+      <>
+        {renderBotaoVoltar()}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📊 Estatísticas da Copa</Text>
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.cardText}>Melhor ataque</Text>
+
+            <Text style={styles.jogoTitulo}>
+              {melhorAtaque
+                ? `${bandeiraPais(melhorAtaque.selecao)} ${traduzirPais(
+                    melhorAtaque.selecao
+                  )}`
+                : 'Aguardando resultados'}
+            </Text>
+
+            <Text style={styles.infoText}>
+              {melhorAtaque?.gols_pro ?? 0} gols marcados
+            </Text>
+          </View>
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.cardText}>Melhor defesa</Text>
+
+            <Text style={styles.jogoTitulo}>
+              {melhorDefesa
+                ? `${bandeiraPais(melhorDefesa.selecao)} ${traduzirPais(
+                    melhorDefesa.selecao
+                  )}`
+                : 'Aguardando resultados'}
+            </Text>
+
+            <Text style={styles.infoText}>
+              {melhorDefesa?.gols_contra ?? 0} gols sofridos
+            </Text>
+          </View>
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.cardText}>Maior saldo de gols</Text>
+
+            <Text style={styles.jogoTitulo}>
+              {maiorSaldo
+                ? `${bandeiraPais(maiorSaldo.selecao)} ${traduzirPais(
+                    maiorSaldo.selecao
+                  )}`
+                : 'Aguardando resultados'}
+            </Text>
+
+            <Text style={styles.infoText}>
+              Saldo {maiorSaldo?.saldo ?? 0}
+            </Text>
+          </View>
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.cardText}>Jogo com mais gols</Text>
+
+            {jogoMaisGols ? (
+              <>
+                <Text style={styles.jogoTitulo}>
+                  {traduzirPais(jogoMaisGols.time_casa)}{' '}
+                  {jogoMaisGols.placar_casa} x{' '}
+                  {jogoMaisGols.placar_fora}{' '}
+                  {traduzirPais(jogoMaisGols.time_fora)}
+                </Text>
+
+                <Text style={styles.infoText}>
+                  {(jogoMaisGols.placar_casa ?? 0) +
+                    (jogoMaisGols.placar_fora ?? 0)}{' '}
+                  gols na partida
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.infoText}>
+                Nenhum jogo finalizado encontrado
+              </Text>
+            )}
+          </View>
+        </View>
+      </>
+    );
+  }
+
   function renderConteudo() {
     if (carregando) {
       return (
@@ -457,6 +599,7 @@ export default function CopaScreen() {
     if (secaoAtiva === 'jogos') return renderJogos();
     if (secaoAtiva === 'grupos') return renderGrupos();
     if (secaoAtiva === 'classificacao') return renderClassificacao();
+    if (secaoAtiva === 'estatisticas') return renderEstatisticas();
 
     return renderHome();
   }
