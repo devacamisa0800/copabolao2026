@@ -96,7 +96,7 @@ const paises: Record<string, { nome: string; bandeira: string }> = {
   Australia: { nome: 'Austrália', bandeira: '🇦🇺' },
   Belgium: { nome: 'Bélgica', bandeira: '🇧🇪' },
   Brazil: { nome: 'Brasil', bandeira: '🇧🇷' },
-  'Bosnia and Herzegovina': { nome: 'Bósnia e Herzegovina', bandeira: '🇧🇦' },
+  'Bosnia and Herzegovina': { nome: 'Bósnia', bandeira: '🇧🇦' },
   'Cape Verde': { nome: 'Cabo Verde', bandeira: '🇨🇻' },
   Canada: { nome: 'Canadá', bandeira: '🇨🇦' },
   Qatar: { nome: 'Catar', bandeira: '🇶🇦' },
@@ -132,10 +132,10 @@ const paises: Record<string, { nome: string; bandeira: string }> = {
   Panama: { nome: 'Panamá', bandeira: '🇵🇦' },
   Paraguay: { nome: 'Paraguai', bandeira: '🇵🇾' }, 
   Portugal: { nome: 'Portugal', bandeira: '🇵🇹' }, 
-  'Congo DR': { nome: 'Rep Dem do Congo', bandeira: '🇨🇩' },
-  'DR Congo': { nome: 'Rep Dem do Congo', bandeira: '🇨🇩' },
-  'Democratic Republic of the Congo': { nome: 'Rep Dem do Congo', bandeira: '🇨🇩' }, 
-  Czechia: { nome: 'República Tcheca', bandeira: '🇨🇿' },
+  'Congo DR': { nome: 'RD Congo', bandeira: '🇨🇩' },
+  'DR Congo': { nome: 'RD Congo', bandeira: '🇨🇩' },
+  'Democratic Republic of the Congo': { nome: 'RD Congo', bandeira: '🇨🇩' }, 
+  Czechia: { nome: 'Chéquia', bandeira: '🇨🇿' },
   Senegal: { nome: 'Senegal', bandeira: '🇸🇳' },
   Sweden: { nome: 'Suécia', bandeira: '🇸🇪' }, 
   Switzerland: { nome: 'Suíça', bandeira: '🇨🇭' },
@@ -249,7 +249,7 @@ export default function CopaScreen() {
         <Text style={styles.dataText}>{formatarData(jogo.data_jogo)}</Text>
 
         <Text style={styles.jogoTitulo}>
-          {jogo.time_casa} x {jogo.time_fora}
+          {traduzirPais(jogo.time_casa)} x {traduzirPais(jogo.time_fora)}
         </Text>
 
         <Text style={styles.cardText}>
@@ -281,6 +281,9 @@ export default function CopaScreen() {
           <View style={styles.grupoNumeros}>
             <Text style={styles.grupoCabecalhoNumero}>Pts</Text>
             <Text style={styles.grupoCabecalhoNumero}>J</Text>
+            <Text style={styles.grupoCabecalhoNumero}>V</Text>
+            <Text style={styles.grupoCabecalhoNumero}>E</Text>
+            <Text style={styles.grupoCabecalhoNumero}>D</Text>
             <Text style={styles.grupoCabecalhoNumero}>SG</Text>
           </View>
         </View>
@@ -297,6 +300,9 @@ export default function CopaScreen() {
               <View style={styles.grupoNumeros}>
                 <Text style={styles.grupoNumero}>{time.pontos ?? 0}</Text>
                 <Text style={styles.grupoNumero}>{time.jogos ?? 0}</Text>
+                <Text style={styles.grupoNumero}>{time.vitorias ?? 0}</Text>
+                <Text style={styles.grupoNumero}>{time.empates ?? 0}</Text>
+                <Text style={styles.grupoNumero}>{time.derrotas ?? 0}</Text>
                 <Text style={styles.grupoNumero}>{time.saldo ?? 0}</Text>
               </View>
             </View>
@@ -312,7 +318,7 @@ export default function CopaScreen() {
         {renderBotaoHome(
           'jogos',
           '📅 Jogos da Copa',
-          `${jogos.length} jogos cadastrados`
+          `${jogos.length} partidas da Copa 2026`
         )}
 
         {renderBotaoHome(
