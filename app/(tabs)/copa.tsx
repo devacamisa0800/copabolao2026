@@ -31,7 +31,13 @@ type Grupo = {
   saldo: number | null;
 };
 
-type SecaoAtiva = 'home' | 'jogos' | 'grupos' | 'classificacao' | 'estatisticas';
+type SecaoAtiva =
+  | 'home'
+  | 'jogos'
+  | 'grupos'
+  | 'classificacao'
+  | 'estatisticas'
+  | 'detalheJogo';
 
 function formatarData(data: string | null) {
   if (!data) return 'Data não definida';
@@ -119,7 +125,7 @@ const paises: Record<string, { nome: string; bandeira: string }> = {
   Ghana: { nome: 'Gana', bandeira: '🇬🇭' },
   Haiti: { nome: 'Haiti', bandeira: '🇭🇹' },
   Netherlands: { nome: 'Holanda', bandeira: '🇳🇱' },
-  England: { nome: 'Inglaterra', bandeira: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  England: { nome: 'Inglaterra', bandeira: '🏴' },
   Iran: { nome: 'Irã', bandeira: '🇮🇷' },
   'IR Iran': { nome: 'Irã', bandeira: '🇮🇷' },
   Iraq: { nome: 'Iraque', bandeira: '🇮🇶' },
@@ -130,14 +136,14 @@ const paises: Record<string, { nome: string; bandeira: string }> = {
   Norway: { nome: 'Noruega', bandeira: '🇳🇴' },
   'New Zealand': { nome: 'Nova Zelândia', bandeira: '🇳🇿' },
   Panama: { nome: 'Panamá', bandeira: '🇵🇦' },
-  Paraguay: { nome: 'Paraguai', bandeira: '🇵🇾' }, 
-  Portugal: { nome: 'Portugal', bandeira: '🇵🇹' }, 
+  Paraguay: { nome: 'Paraguai', bandeira: '🇵🇾' },
+  Portugal: { nome: 'Portugal', bandeira: '🇵🇹' },
   'Congo DR': { nome: 'RD Congo', bandeira: '🇨🇩' },
   'DR Congo': { nome: 'RD Congo', bandeira: '🇨🇩' },
-  'Democratic Republic of the Congo': { nome: 'RD Congo', bandeira: '🇨🇩' }, 
+  'Democratic Republic of the Congo': { nome: 'RD Congo', bandeira: '🇨🇩' },
   Czechia: { nome: 'Chéquia', bandeira: '🇨🇿' },
   Senegal: { nome: 'Senegal', bandeira: '🇸🇳' },
-  Sweden: { nome: 'Suécia', bandeira: '🇸🇪' }, 
+  Sweden: { nome: 'Suécia', bandeira: '🇸🇪' },
   Switzerland: { nome: 'Suíça', bandeira: '🇨🇭' },
   Tunisia: { nome: 'Tunísia', bandeira: '🇹🇳' },
   Turkey: { nome: 'Turquia', bandeira: '🇹🇷' },
@@ -161,6 +167,7 @@ export default function CopaScreen() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [secaoAtiva, setSecaoAtiva] = useState<SecaoAtiva>('home');
+  const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
 
   async function carregarDados() {
     setCarregando(true);
@@ -232,9 +239,26 @@ export default function CopaScreen() {
     return (
       <Pressable
         style={styles.voltarBotao}
-        onPress={() => setSecaoAtiva('home')}
+        onPress={() => {
+          setJogoSelecionado(null);
+          setSecaoAtiva('home');
+        }}
       >
         <Text style={styles.voltarTexto}>← Voltar</Text>
+      </Pressable>
+    );
+  }
+
+  function renderBotaoVoltarJogos() {
+    return (
+      <Pressable
+        style={styles.voltarBotao}
+        onPress={() => {
+          setJogoSelecionado(null);
+          setSecaoAtiva('jogos');
+        }}
+      >
+        <Text style={styles.voltarTexto}>← Voltar para jogos</Text>
       </Pressable>
     );
   }
@@ -245,7 +269,14 @@ export default function CopaScreen() {
       .join(' • ');
 
     return (
-      <View key={jogo.id} style={styles.jogoBox}>
+      <Pressable
+        key={jogo.id}
+        style={styles.jogoBox}
+        onPress={() => {
+          setJogoSelecionado(jogo);
+          setSecaoAtiva('detalheJogo');
+        }}
+      >
         <Text style={styles.dataText}>{formatarData(jogo.data_jogo)}</Text>
 
         <Text style={styles.jogoTitulo}>
@@ -264,7 +295,7 @@ export default function CopaScreen() {
             {jogo.placar_casa ?? '-'} x {jogo.placar_fora ?? '-'}
           </Text>
         )}
-      </View>
+      </Pressable>
     );
   }
 
@@ -332,7 +363,6 @@ export default function CopaScreen() {
           '📊 Estatísticas',
           'Veja os principais números da Copa'
         )}
-
       </>
     );
   }
@@ -387,20 +417,14 @@ export default function CopaScreen() {
           <Text style={styles.cardTitle}>📊 Classificação</Text>
 
           {letrasGrupos.map((letra) => {
-            const selecoes = grupos.filter(
-              (item) => item.grupo === letra
-            );
+            const selecoes = grupos.filter((item) => item.grupo === letra);
 
             return (
               <View key={letra} style={styles.grupoBox}>
-                <Text style={styles.grupoTitulo}>
-                  Grupo {letra}
-                </Text>
+                <Text style={styles.grupoTitulo}>Grupo {letra}</Text>
 
                 <View style={styles.grupoCabecalho}>
-                  <Text style={styles.grupoCabecalhoTime}>
-                    Seleção
-                  </Text>
+                  <Text style={styles.grupoCabecalhoTime}>Seleção</Text>
 
                   <View style={styles.grupoNumeros}>
                     <Text style={styles.grupoCabecalhoNumero}>Pts</Text>
@@ -412,26 +436,13 @@ export default function CopaScreen() {
 
                 {selecoes.map((time) => (
                   <View key={time.id} style={styles.grupoLinha}>
-                    <Text style={styles.grupoSelecao}>
-                      {time.selecao}
-                    </Text>
+                    <Text style={styles.grupoSelecao}>{time.selecao}</Text>
 
                     <View style={styles.grupoNumeros}>
-                      <Text style={styles.grupoNumero}>
-                        {time.pontos ?? 0}
-                      </Text>
-
-                      <Text style={styles.grupoNumero}>
-                        {time.jogos ?? 0}
-                      </Text>
-
-                      <Text style={styles.grupoNumero}>
-                        {time.vitorias ?? 0}
-                      </Text>
-
-                      <Text style={styles.grupoNumero}>
-                        {time.saldo ?? 0}
-                      </Text>
+                      <Text style={styles.grupoNumero}>{time.pontos ?? 0}</Text>
+                      <Text style={styles.grupoNumero}>{time.jogos ?? 0}</Text>
+                      <Text style={styles.grupoNumero}>{time.vitorias ?? 0}</Text>
+                      <Text style={styles.grupoNumero}>{time.saldo ?? 0}</Text>
                     </View>
                   </View>
                 ))}
@@ -537,11 +548,11 @@ export default function CopaScreen() {
                 : 'Aguardando resultados'}
             </Text>
 
-              {melhorAtaque && (
-                <Text style={styles.infoText}>
-                  {melhorAtaque.gols_pro ?? 0} gols marcados
-                </Text>
-              )}
+            {melhorAtaque && (
+              <Text style={styles.infoText}>
+                {melhorAtaque.gols_pro ?? 0} gols marcados
+              </Text>
+            )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -554,12 +565,12 @@ export default function CopaScreen() {
                   )}`
                 : 'Aguardando resultados'}
             </Text>
- 
-              {melhorDefesa && (
-                <Text style={styles.infoText}>
-                  {melhorDefesa.gols_contra ?? 0} gols sofridos
-                </Text>
-              )}
+
+            {melhorDefesa && (
+              <Text style={styles.infoText}>
+                {melhorDefesa.gols_contra ?? 0} gols sofridos
+              </Text>
+            )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -573,11 +584,11 @@ export default function CopaScreen() {
                 : 'Aguardando resultados'}
             </Text>
 
-              {maiorSaldo && (
-                <Text style={styles.infoText}>
-                  Saldo {maiorSaldo.saldo ?? 0}
-                </Text>
-              )}
+            {maiorSaldo && (
+              <Text style={styles.infoText}>
+                Saldo {maiorSaldo.saldo ?? 0}
+              </Text>
+            )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -587,8 +598,7 @@ export default function CopaScreen() {
               <>
                 <Text style={styles.jogoTitulo}>
                   {traduzirPais(jogoMaisGols.time_casa)}{' '}
-                  {jogoMaisGols.placar_casa} x{' '}
-                  {jogoMaisGols.placar_fora}{' '}
+                  {jogoMaisGols.placar_casa} x {jogoMaisGols.placar_fora}{' '}
                   {traduzirPais(jogoMaisGols.time_fora)}
                 </Text>
 
@@ -612,43 +622,122 @@ export default function CopaScreen() {
             {topAtaques.length > 0 ? (
               topAtaques.map((time, index) => (
                 <Text key={`ataque-${time.id}`} style={styles.infoText}>
-                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} —{' '}
-                  {time.gols_pro ?? 0} gols
+                  {index + 1}. {bandeiraPais(time.selecao)}{' '}
+                  {traduzirPais(time.selecao)} — {time.gols_pro ?? 0} gols
                 </Text>
               ))
             ) : (
-              <Text style={styles.cardText}>
-                Aguardando resultados
-              </Text>
+              <Text style={styles.cardText}>Aguardando resultados</Text>
             )}
 
             <Text style={styles.cardText}>Top 5 defesas</Text>
             {topDefesas.length > 0 ? (
               topDefesas.map((time, index) => (
                 <Text key={`defesa-${time.id}`} style={styles.infoText}>
-                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} —{' '}
-                  {time.gols_contra ?? 0} gols sofridos
+                  {index + 1}. {bandeiraPais(time.selecao)}{' '}
+                  {traduzirPais(time.selecao)} — {time.gols_contra ?? 0} gols sofridos
                 </Text>
               ))
             ) : (
-              <Text style={styles.cardText}>
-                Aguardando resultados
-              </Text>
+              <Text style={styles.cardText}>Aguardando resultados</Text>
             )}
 
             <Text style={styles.cardText}>Top 5 saldos</Text>
             {topSaldos.length > 0 ? (
               topSaldos.map((time, index) => (
                 <Text key={`saldo-${time.id}`} style={styles.infoText}>
-                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} — saldo{' '}
-                  {time.saldo ?? 0}
+                  {index + 1}. {bandeiraPais(time.selecao)}{' '}
+                  {traduzirPais(time.selecao)} — saldo {time.saldo ?? 0}
                 </Text>
               ))
             ) : (
-              <Text style={styles.cardText}>
-                Aguardando resultados
-              </Text>
+              <Text style={styles.cardText}>Aguardando resultados</Text>
             )}
+          </View>
+        </View>
+      </>
+    );
+  }
+
+  function renderDetalheJogo() {
+    if (!jogoSelecionado) {
+      return (
+        <>
+          {renderBotaoVoltar()}
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Jogo não encontrado</Text>
+            <Text style={styles.cardText}>
+              Selecione um jogo novamente para ver os detalhes.
+            </Text>
+          </View>
+        </>
+      );
+    }
+
+    const local = [jogoSelecionado.estadio, formatarCidade(jogoSelecionado.cidade)]
+      .filter(Boolean)
+      .join(' • ');
+
+    return (
+      <>
+        {renderBotaoVoltarJogos()}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📋 Detalhes do Jogo</Text>
+
+          <View style={styles.detalheConfronto}>
+            <Text style={styles.detalheTime}>
+              {bandeiraPais(jogoSelecionado.time_casa)}{' '}
+              {traduzirPais(jogoSelecionado.time_casa)}
+            </Text>
+
+            <Text style={styles.detalheVersus}>x</Text>
+
+            <Text style={styles.detalheTime}>
+              {bandeiraPais(jogoSelecionado.time_fora)}{' '}
+              {traduzirPais(jogoSelecionado.time_fora)}
+            </Text>
+          </View>
+
+          {jogoSelecionado.status && jogoSelecionado.status !== 'NS' ? (
+            <Text style={styles.placarDetalhe}>
+              {jogoSelecionado.placar_casa ?? '-'} x{' '}
+              {jogoSelecionado.placar_fora ?? '-'}
+            </Text>
+          ) : (
+            <Text style={styles.infoText}>Placar ainda não disponível</Text>
+          )}
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.detalheLabel}>Data e hora</Text>
+            <Text style={styles.cardText}>
+              {formatarData(jogoSelecionado.data_jogo)}
+            </Text>
+
+            <Text style={styles.detalheLabel}>Fase</Text>
+            <Text style={styles.cardText}>
+              {traduzirFase(jogoSelecionado.fase)}
+            </Text>
+
+            {jogoSelecionado.grupo && (
+              <>
+                <Text style={styles.detalheLabel}>Grupo</Text>
+                <Text style={styles.cardText}>Grupo {jogoSelecionado.grupo}</Text>
+              </>
+            )}
+
+            {local !== '' && (
+              <>
+                <Text style={styles.detalheLabel}>Local</Text>
+                <Text style={styles.cardText}>{local}</Text>
+              </>
+            )}
+
+            <Text style={styles.detalheLabel}>Status</Text>
+            <Text style={styles.cardText}>
+              {jogoSelecionado.status || 'Não iniciado'}
+            </Text>
           </View>
         </View>
       </>
@@ -676,6 +765,7 @@ export default function CopaScreen() {
     if (secaoAtiva === 'grupos') return renderGrupos();
     if (secaoAtiva === 'classificacao') return renderClassificacao();
     if (secaoAtiva === 'estatisticas') return renderEstatisticas();
+    if (secaoAtiva === 'detalheJogo') return renderDetalheJogo();
 
     return renderHome();
   }
@@ -785,11 +875,48 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
+  placarDetalhe: {
+    color: '#F5C542',
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 12,
+  },
+
   infoText: {
     color: '#D6E4F0',
     fontSize: 14,
     marginTop: 16,
     textAlign: 'center',
+  },
+
+  detalheConfronto: {
+    marginTop: 12,
+    marginBottom: 12,
+  },
+
+  detalheTime: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
+  detalheVersus: {
+    color: '#F5C542',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
+  detalheLabel: {
+    color: '#F5C542',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 2,
   },
 
   grupoBox: {
