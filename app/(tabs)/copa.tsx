@@ -489,11 +489,35 @@ export default function CopaScreen() {
     return ordenado[0];
   }
 
+  function calcularTopAtaques() {
+    return [...grupos]
+      .filter((time) => (time.gols_pro ?? 0) > 0)
+      .sort((a, b) => (b.gols_pro ?? 0) - (a.gols_pro ?? 0))
+      .slice(0, 5);
+  }
+
+  function calcularTopDefesas() {
+    return [...grupos]
+      .filter((time) => (time.jogos ?? 0) > 0)
+      .sort((a, b) => (a.gols_contra ?? 0) - (b.gols_contra ?? 0))
+      .slice(0, 5);
+  }
+
+  function calcularTopSaldos() {
+    return [...grupos]
+      .filter((time) => (time.jogos ?? 0) > 0)
+      .sort((a, b) => (b.saldo ?? 0) - (a.saldo ?? 0))
+      .slice(0, 5);
+  }
+
   function renderEstatisticas() {
     const melhorAtaque = calcularMelhorAtaque();
     const melhorDefesa = calcularMelhorDefesa();
     const maiorSaldo = calcularMaiorSaldo();
     const jogoMaisGols = calcularJogoMaisGols();
+    const topAtaques = calcularTopAtaques();
+    const topDefesas = calcularTopDefesas();
+    const topSaldos = calcularTopSaldos();
 
     return (
       <>
@@ -513,9 +537,11 @@ export default function CopaScreen() {
                 : 'Aguardando resultados'}
             </Text>
 
-            <Text style={styles.infoText}>
-              {melhorAtaque?.gols_pro ?? 0} gols marcados
-            </Text>
+              {melhorAtaque && (
+                <Text style={styles.infoText}>
+                  {melhorAtaque.gols_pro ?? 0} gols marcados
+                </Text>
+              )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -528,10 +554,12 @@ export default function CopaScreen() {
                   )}`
                 : 'Aguardando resultados'}
             </Text>
-
-            <Text style={styles.infoText}>
-              {melhorDefesa?.gols_contra ?? 0} gols sofridos
-            </Text>
+ 
+              {melhorDefesa && (
+                <Text style={styles.infoText}>
+                  {melhorDefesa.gols_contra ?? 0} gols sofridos
+                </Text>
+              )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -545,9 +573,11 @@ export default function CopaScreen() {
                 : 'Aguardando resultados'}
             </Text>
 
-            <Text style={styles.infoText}>
-              Saldo {maiorSaldo?.saldo ?? 0}
-            </Text>
+              {maiorSaldo && (
+                <Text style={styles.infoText}>
+                  Saldo {maiorSaldo.saldo ?? 0}
+                </Text>
+              )}
           </View>
 
           <View style={styles.jogoBox}>
@@ -571,6 +601,52 @@ export default function CopaScreen() {
             ) : (
               <Text style={styles.infoText}>
                 Nenhum jogo finalizado encontrado
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.jogoBox}>
+            <Text style={styles.cardTitle}>🏅 Rankings</Text>
+
+            <Text style={styles.cardText}>Top 5 ataques</Text>
+            {topAtaques.length > 0 ? (
+              topAtaques.map((time, index) => (
+                <Text key={`ataque-${time.id}`} style={styles.infoText}>
+                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} —{' '}
+                  {time.gols_pro ?? 0} gols
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.cardText}>
+                Aguardando resultados
+              </Text>
+            )}
+
+            <Text style={styles.cardText}>Top 5 defesas</Text>
+            {topDefesas.length > 0 ? (
+              topDefesas.map((time, index) => (
+                <Text key={`defesa-${time.id}`} style={styles.infoText}>
+                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} —{' '}
+                  {time.gols_contra ?? 0} gols sofridos
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.cardText}>
+                Aguardando resultados
+              </Text>
+            )}
+
+            <Text style={styles.cardText}>Top 5 saldos</Text>
+            {topSaldos.length > 0 ? (
+              topSaldos.map((time, index) => (
+                <Text key={`saldo-${time.id}`} style={styles.infoText}>
+                  {index + 1}. {bandeiraPais(time.selecao)} {traduzirPais(time.selecao)} — saldo{' '}
+                  {time.saldo ?? 0}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.cardText}>
+                Aguardando resultados
               </Text>
             )}
           </View>
