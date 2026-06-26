@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { bandeiraPais, traduzirPais } from '@/constants/selecoes';
 import {
   buscarJogosComPalpites,
   buscarParticipanteDoBolao,
@@ -27,53 +28,6 @@ type UsuarioApp = {
 type PalpiteInput = {
   golsCasa: string;
   golsFora: string;
-};
-
-type PaisInfo = {
-  nome: string;
-  bandeira: string;
-};
-
-const PAISES: Record<string, PaisInfo> = {
-  argentina: { nome: 'Argentina', bandeira: '🇦🇷' },
-  australia: { nome: 'Austrália', bandeira: '🇦🇺' },
-  austria: { nome: 'Áustria', bandeira: '🇦🇹' },
-  belgium: { nome: 'Bélgica', bandeira: '🇧🇪' },
-  bolivia: { nome: 'Bolívia', bandeira: '🇧🇴' },
-  brazil: { nome: 'Brasil', bandeira: '🇧🇷' },
-  brasil: { nome: 'Brasil', bandeira: '🇧🇷' },
-  cameroon: { nome: 'Camarões', bandeira: '🇨🇲' },
-  canada: { nome: 'Canadá', bandeira: '🇨🇦' },
-  chile: { nome: 'Chile', bandeira: '🇨🇱' },
-  colombia: { nome: 'Colômbia', bandeira: '🇨🇴' },
-  croatia: { nome: 'Croácia', bandeira: '🇭🇷' },
-  czechia: { nome: 'Tchéquia', bandeira: '🇨🇿' },
-  denmark: { nome: 'Dinamarca', bandeira: '🇩🇰' },
-  ecuador: { nome: 'Equador', bandeira: '🇪🇨' },
-  england: { nome: 'Inglaterra', bandeira: '🏴' },
-  france: { nome: 'França', bandeira: '🇫🇷' },
-  germany: { nome: 'Alemanha', bandeira: '🇩🇪' },
-  ghana: { nome: 'Gana', bandeira: '🇬🇭' },
-  iran: { nome: 'Irã', bandeira: '🇮🇷' },
-  italy: { nome: 'Itália', bandeira: '🇮🇹' },
-  japan: { nome: 'Japão', bandeira: '🇯🇵' },
-  'korea republic': { nome: 'Coreia do Sul', bandeira: '🇰🇷' },
-  mexico: { nome: 'México', bandeira: '🇲🇽' },
-  morocco: { nome: 'Marrocos', bandeira: '🇲🇦' },
-  netherlands: { nome: 'Holanda', bandeira: '🇳🇱' },
-  norway: { nome: 'Noruega', bandeira: '🇳🇴' },
-  paraguay: { nome: 'Paraguai', bandeira: '🇵🇾' },
-  peru: { nome: 'Peru', bandeira: '🇵🇪' },
-  portugal: { nome: 'Portugal', bandeira: '🇵🇹' },
-  senegal: { nome: 'Senegal', bandeira: '🇸🇳' },
-  serbia: { nome: 'Sérvia', bandeira: '🇷🇸' },
-  spain: { nome: 'Espanha', bandeira: '🇪🇸' },
-  switzerland: { nome: 'Suíça', bandeira: '🇨🇭' },
-  'south africa': { nome: 'África do Sul', bandeira: '🇿🇦' },
-  ukraine: { nome: 'Ucrânia', bandeira: '🇺🇦' },
-  uruguay: { nome: 'Uruguai', bandeira: '🇺🇾' },
-  usa: { nome: 'Estados Unidos', bandeira: '🇺🇸' },
-  'united states': { nome: 'Estados Unidos', bandeira: '🇺🇸' },
 };
 
 export default function PalpitesScreen() {
@@ -179,6 +133,15 @@ export default function PalpitesScreen() {
     jogoJaComecou(jogo.data_jogo)
   );
 
+  function voltarParaBolao() {
+    if (!bolaoId) {
+      router.replace('/(tabs)/bolao');
+      return;
+    }
+
+    router.replace(`/bolao/${bolaoId}` as any);
+  }
+
   function atualizarPalpite(
     jogoId: string,
     campo: 'golsCasa' | 'golsFora',
@@ -270,21 +233,8 @@ export default function PalpitesScreen() {
     });
   }
 
-  function normalizarNome(time: string) {
-    return time.trim().toLowerCase();
-  }
-
-  function pais(time: string) {
-    const info = PAISES[normalizarNome(time)];
-
-    if (!info) {
-      return {
-        nome: time,
-        bandeira: '🏳️',
-      };
-    }
-
-    return info;
+  function temResultado(jogo: JogoComPalpite) {
+    return jogo.placar_casa !== null && jogo.placar_fora !== null;
   }
 
   function statusVisual(jogo: JogoComPalpite) {
@@ -308,10 +258,6 @@ export default function PalpitesScreen() {
     };
   }
 
-  function temResultado(jogo: JogoComPalpite) {
-    return jogo.placar_casa !== null && jogo.placar_fora !== null;
-  }
-
   function renderizarJogo(jogo: JogoComPalpite) {
     const bloqueado = jogoJaComecou(jogo.data_jogo);
     const palpiteAtual = palpites[jogo.id] || {
@@ -319,8 +265,11 @@ export default function PalpitesScreen() {
       golsFora: '',
     };
     const status = statusVisual(jogo);
-    const timeCasa = pais(jogo.time_casa);
-    const timeFora = pais(jogo.time_fora);
+
+    const nomeCasa = traduzirPais(jogo.time_casa);
+    const nomeFora = traduzirPais(jogo.time_fora);
+    const bandeiraCasa = bandeiraPais(jogo.time_casa);
+    const bandeiraFora = bandeiraPais(jogo.time_fora);
 
     if (bloqueado) {
       return (
@@ -331,8 +280,7 @@ export default function PalpitesScreen() {
           </View>
 
           <Text style={styles.matchCompact}>
-            {timeCasa.bandeira} {timeCasa.nome} x {timeFora.nome}{' '}
-            {timeFora.bandeira}
+            {bandeiraCasa} {nomeCasa} x {nomeFora} {bandeiraFora}
           </Text>
 
           <View style={styles.compactInfoBox}>
@@ -369,7 +317,7 @@ export default function PalpitesScreen() {
 
         <View style={styles.teams}>
           <Text style={styles.teamName}>
-            {timeCasa.bandeira} {timeCasa.nome}
+            {bandeiraCasa} {nomeCasa}
           </Text>
 
           <View style={styles.scoreRow}>
@@ -399,7 +347,7 @@ export default function PalpitesScreen() {
           </View>
 
           <Text style={styles.teamName}>
-            {timeFora.bandeira} {timeFora.nome}
+            {bandeiraFora} {nomeFora}
           </Text>
         </View>
 
@@ -412,7 +360,7 @@ export default function PalpitesScreen() {
             {salvandoJogoId === jogo.id
               ? 'Salvando...'
               : jogo.palpite
-                ? 'Atualizar Palpite'
+                ? 'Salvar Alterações'
                 : 'Salvar Palpite'}
           </Text>
         </Pressable>
@@ -428,6 +376,10 @@ export default function PalpitesScreen() {
         <RefreshControl refreshing={carregando} onRefresh={carregarDados} />
       }
     >
+      <Pressable style={styles.backButton} onPress={voltarParaBolao}>
+        <Text style={styles.backButtonText}>← Voltar</Text>
+      </Pressable>
+
       <Text style={styles.title}>Palpites</Text>
       <Text style={styles.subtitle}>Faça seus palpites para os jogos da Copa</Text>
 
@@ -437,7 +389,7 @@ export default function PalpitesScreen() {
         <>
           <View style={styles.summaryBox}>
             <Text style={styles.summaryText}>
-              {jogosAbertos.length} jogos abertos para palpites
+              {jogosAbertos.length} de {jogos.length} jogos abertos para palpites
             </Text>
             <Text style={styles.summaryDetail}>
               Jogos encerrados aparecem no final em formato resumido.
@@ -465,8 +417,22 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 48,
     paddingBottom: 32,
+  },
+
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingRight: 16,
+  },
+
+  backButtonText: {
+    color: '#F5C542',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 
   title: {
@@ -474,7 +440,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 8,
   },
 
   subtitle: {

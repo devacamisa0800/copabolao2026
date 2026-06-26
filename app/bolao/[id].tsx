@@ -168,7 +168,13 @@ export default function BolaoDetalheScreen() {
         <RefreshControl refreshing={carregando} onRefresh={carregarDetalhes} />
       }
     >
-      <Text style={styles.title}>{bolao?.nome || 'Bolão'}</Text>
+      <Text
+        style={styles.title}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {bolao?.nome || 'Bolão'}
+      </Text>
 
       {bolao && (
         <View style={styles.mainActions}>
@@ -184,7 +190,7 @@ export default function BolaoDetalheScreen() {
 
       {bolao && (
         <View style={styles.codigoBox}>
-          <Text style={styles.codigoLabel}>Código do convite</Text>
+          <Text style={styles.codigoLabel}>Código do Bolão</Text>
           <Text style={styles.codigoTexto}>{bolao.codigo}</Text>
 
           <View style={styles.actions}>
@@ -197,7 +203,7 @@ export default function BolaoDetalheScreen() {
               onPress={compartilharConvite}
             >
               <Text style={styles.secondaryButtonText}>
-                Compartilhar Convite
+                Compartilhar
               </Text>
             </Pressable>
           </View>
@@ -206,11 +212,11 @@ export default function BolaoDetalheScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🏆 Ranking</Text>
+          <Text style={styles.sectionTitle}>🏆 Top 3</Text>
 
           {ranking.length > 3 && (
             <Pressable onPress={abrirRanking}>
-              <Text style={styles.verTodosText}>Ver todos</Text>
+              <Text style={styles.verTodosText}>Ranking completo →</Text>
             </Pressable>
           )}
         </View>
@@ -237,7 +243,9 @@ export default function BolaoDetalheScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Participantes</Text>
+        <Text style={styles.sectionTitle}>
+          👥 Participantes ({participantes.length})
+        </Text>
 
         {participantes.length === 0 ? (
           <Text style={styles.emptyText}>Nenhum participante encontrado.</Text>
@@ -271,7 +279,9 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 24,
+    marginTop: 24,
+    marginBottom: 20,
+    paddingHorizontal: 12,
   },
 
   mainActions: {
