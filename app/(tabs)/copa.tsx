@@ -153,12 +153,63 @@ const paises: Record<string, { nome: string; bandeira: string }> = {
   Uzbekistan: { nome: 'Uzbequistão', bandeira: '🇺🇿' },
 };
 
+const bandeirasPorNome: Record<string, string> = {
+  'África do Sul': '🇿🇦',
+  Alemanha: '🇩🇪',
+  'Arábia Saudita': '🇸🇦',
+  Argélia: '🇩🇿',
+  Argentina: '🇦🇷',
+  Austrália: '🇦🇺',
+  Áustria: '🇦🇹',
+  Bélgica: '🇧🇪',
+  Bósnia: '🇧🇦',
+  Brasil: '🇧🇷',
+  'Cabo Verde': '🇨🇻',
+  Canadá: '🇨🇦',
+  Catar: '🇶🇦',
+  Chéquia: '🇨🇿',
+  Colômbia: '🇨🇴',
+  'Coreia do Sul': '🇰🇷',
+  'Costa do Marfim': '🇨🇮',
+  Croácia: '🇭🇷',
+  Curaçao: '🇨🇼',
+  Egito: '🇪🇬',
+  Equador: '🇪🇨',
+  Escócia: '🏴',
+  Espanha: '🇪🇸',
+  'Estados Unidos': '🇺🇸',
+  França: '🇫🇷',
+  Gana: '🇬🇭',
+  Haiti: '🇭🇹',
+  Holanda: '🇳🇱',
+  Inglaterra: '🏴',
+  Irã: '🇮🇷',
+  Iraque: '🇮🇶',
+  Japão: '🇯🇵',
+  Jordânia: '🇯🇴',
+  Marrocos: '🇲🇦',
+  México: '🇲🇽',
+  Noruega: '🇳🇴',
+  'Nova Zelândia': '🇳🇿',
+  Panamá: '🇵🇦',
+  Paraguai: '🇵🇾',
+  Portugal: '🇵🇹',
+  'RD Congo': '🇨🇩',
+  Senegal: '🇸🇳',
+  Suécia: '🇸🇪',
+  Suíça: '🇨🇭',
+  Tunísia: '🇹🇳',
+  Turquia: '🇹🇷',
+  Uruguai: '🇺🇾',
+  Uzbequistão: '🇺🇿',
+};
+
 function traduzirPais(nome: string) {
   return paises[nome]?.nome || nome;
 }
 
 function bandeiraPais(nome: string) {
-  return paises[nome]?.bandeira || '🏳️';
+  return bandeirasPorNome[nome] || paises[nome]?.bandeira || '🏳️';
 }
 
 export default function CopaScreen() {
@@ -166,6 +217,8 @@ export default function CopaScreen() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [sincronizando, setSincronizando] = useState(false);
+  const [mensagemSync, setMensagemSync] = useState('');
   const [secaoAtiva, setSecaoAtiva] = useState<SecaoAtiva>('home');
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
 
@@ -200,6 +253,28 @@ export default function CopaScreen() {
     setJogos(jogosData || []);
     setGrupos(gruposData || []);
     setCarregando(false);
+  }
+
+  async function atualizarCopa() {
+    try {
+      setSincronizando(true);
+      setMensagemSync('');
+
+      const { error } = await supabase.functions.invoke('sync_world_cup');
+
+      if (error) {
+        throw error;
+      }
+
+      await carregarDados();
+
+      setMensagemSync('Copa atualizada com sucesso.');
+    } catch (e: any) {
+      console.error(e);
+      setMensagemSync(e?.message ?? 'Erro ao atualizar a Copa.');
+    } finally {
+      setSincronizando(false);
+    }
   }
 
   useEffect(() => {
@@ -770,17 +845,31 @@ export default function CopaScreen() {
     return renderHome();
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>🏆 Copa do Mundo 2026</Text>
+return (
+  <ScrollView style={styles.container}>
+    <Text style={styles.title}>🏆 Copa do Mundo 2026</Text>
 
-      {renderConteudo()}
+    <Pressable
+      style={styles.botaoAtualizar}
+      onPress={atualizarCopa}
+      disabled={sincronizando}
+    >
+      <Text style={styles.botaoAtualizarTexto}>
+        {sincronizando ? 'Atualizando Copa...' : '🔄 Atualizar Copa'}
+      </Text>
+    </Pressable>
 
-      <View style={styles.adBox}>
-        <Text style={styles.adText}>Espaço reservado para anúncios</Text>
-      </View>
-    </ScrollView>
-  );
+    {mensagemSync !== '' && (
+      <Text style={styles.infoText}>{mensagemSync}</Text>
+    )}
+
+    {renderConteudo()}
+
+    <View style={styles.adBox}>
+      <Text style={styles.adText}>Espaço reservado para anúncios</Text>
+    </View>
+  </ScrollView>
+);
 }
 
 const styles = StyleSheet.create({
@@ -810,6 +899,20 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 14,
     marginBottom: 16,
+  },
+
+  botaoAtualizar: {
+    backgroundColor: '#F5C542',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+
+  botaoAtualizarTexto: {
+    color: '#0B1F3A',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 
   cardTitle: {
